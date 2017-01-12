@@ -2,7 +2,7 @@
 ![Screenshot](http://i.imgur.com/C4uMD67.png)
 A self-hosted chat app for small teams or big Gal by [Security Compass][seccom].
 
-[![Build Status](https://travis-ci.org/sdelements/lets-chat.svg?branch=master)](https://travis-ci.org/sdelements/lets-chat)
+[![Codefresh build status](https://g.codefresh.io/api/badges/build?branch=master&pipelineName=demochat&repoOwner=containers101&repoName=demochat&accountName=codefresh-inc)](https://g.codefresh.io/repositories/containers101/demochat/builds?filter=trigger:build)
 [![Dependency Status](https://david-dm.org/sdelements/lets-chat.svg)](https://david-dm.org/sdelements/lets-chat)
 [![devDependency Status](https://david-dm.org/sdelements/lets-chat/dev-status.svg)](https://david-dm.org/sdelements/lets-chat#info=devDependencies)
 
