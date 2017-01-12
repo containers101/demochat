@@ -1,3 +1,5 @@
+[![Codefresh build status]( https://g-staging.codefresh.io/api/badges/build?branch=master&repoName=demochat&repoOwner=containers101&pipelineName=demochat&accountName=verchol )]( https://g-staging.codefresh.io/repositories/containers101/demochat/builds?filter=trigger:build )
+
 ![Let's Chat Greylock](http://i.imgur.com/0a3l5VF.png)
 ![Screenshot](http://i.imgur.com/C4uMD67.png)
 A self-hosted chat app for small teams or big Gal by [Security Compass][seccom].
