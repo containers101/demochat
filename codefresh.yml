@@ -11,9 +11,8 @@ steps:
     title: Unit Tests
     image: ${{build_step}}
     fail_fast: false
-    #working-directory : ${{initial-clone}}
+    working-directory : /usr/src/app
     commands:
-      - pwd
       - npm test
 
 #  unit_test:
