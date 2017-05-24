@@ -13,6 +13,7 @@ steps:
     fail_fast: false
     #working-directory : ${{initial-clone}}
     commands:
+      - pwd
       - npm test
 
 #  unit_test:
