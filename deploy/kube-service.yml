@@ -6,7 +6,7 @@ metadata:
     app: app
   name: app
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
   - name: "http"
     port: 80
@@ -14,12 +14,3 @@ spec:
     targetPort: 5000
   selector:
     service: app
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: demochat-ingress
-spec:
-  backend:
-    serviceName: app
-    servicePort: 80

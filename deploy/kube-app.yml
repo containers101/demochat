@@ -10,15 +10,20 @@ spec:
   template:
     metadata:
       annotations:
-        forceRedeployUniqId: "N/A"
+        forceRedeployUniqId: "{{CF_REVISION}}"
       labels:
         service: app
     spec:
       containers:
-      - image: containers101/demochat:master
+      - image: itaicodefresh/demochat:master
         name: app
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
           protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 5000
+
 
