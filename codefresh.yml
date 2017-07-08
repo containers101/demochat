@@ -7,49 +7,6 @@ steps:
     image_name: containers101/demochat
     tag: '${{CF_BRANCH}}'
 
-#  unit_tests:
-#    title: Unit Tests
-#    image: ${{build_step}}
-#    fail_fast: false
-#    working-directory : /usr/src/app
-#    commands:
-#      - npm test
-
-  unit_test:
-    type: composition
-    working_directory: '${{main_clone}}'
-    composition:
-      version: '2'
-      services:
-        mongo:
-          image: 'mongo:latest'
-          ports:
-            - 27017
-    composition_candidates:
-      test:
-        image: '${{build_step}}'
-        command: npm test
-  push_to_registry:
-    title: Push To Registry
-    type: push
-    candidate: ${{build_step}}
-    tag: ${{CF_BRANCH}}
-
-  deploy_to_ecs:
-    title: Deploy Container to ECS
-    image: codefresh/cf-deploy-ecs
-    commands:
-      - >-
-        cfecs-update --image-name containers101/demochat --image-tag
-        ${{CF_BRANCH}} eu-west-1 demochat-production demochat-service
-    environment:
-      - 'AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY_ID}}'
-      - 'AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_ACCESS_KEY}}'
-    when:
-      condition:
-        all:
-          deploy_to_ecs: '"${{DEPLOY_ECS}}" == "true"'
-
   deploy_to_kubernetes:
     image: codefresh/cf-deploy-kubernetes
     tag: latest

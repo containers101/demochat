@@ -15,10 +15,11 @@ spec:
         service: app
     spec:
       containers:
-      - image: containers101/demochat:{{CF_BRANCH}}
+      - image: r.cfcr.io/nikolai/demochat:k8-test
         name: app
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
           protocol: TCP
-
+      imagePullSecrets:
+        - name: rcfcrsecret
