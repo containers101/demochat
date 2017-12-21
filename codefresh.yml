@@ -1,67 +1,29 @@
 version: '1.0'
 steps:
-  build_step:
-    title: Build
+  BuildingDockerImage:
+    title: Building Docker Image
     type: build
+    image_name: verchol/demochat
+    #working_directory: ./service1/
     dockerfile: Dockerfile
-    image_name: demochat
-    tag: '${{CF_BRANCH}}'
+    tag: '${{CF_BRANCH_TAG_NORMALIZED}}'
 
-#  unit_tests:
-#    title: Unit Tests
-#    image: ${{build_step}}
-#    fail_fast: false
-#    working-directory : /usr/src/app
-#    commands:
-#      - npm test
-
-  unit_test:
-    type: composition
-    working_directory: '${{main_clone}}'
-    composition:
-      version: '2'
-      services:
-        mongo:
-          image: 'mongo:latest'
-          ports:
-            - 27017
-    composition_candidates:
-      test:
-        image: '${{build_step}}'
-        command: npm test
-  push_to_registry:
-    title: Push To Registry
+  push:
     type: push
-    candidate: ${{build_step}}
-    tag: ${{CF_BRANCH}}
+    title: push
+    description: Free text description
+    candidate: ${{BuildingDockerImage}}
+    image_name: verchol/demochat
+    tag: v1.0
+    registry: dockerhub
 
-  deploy_to_ecs:
-    title: Deploy Container to ECS
-    image: codefresh/cf-deploy-ecs
+  integration-tests:
+    title : helm step
+    image: verchol/helmclient:v2.6.1
     commands:
-      - >-
-        cfecs-update --image-name containers101/demochat --image-tag
-        ${{CF_BRANCH}} eu-west-1 demochat-production demochat-service
-    environment:
-      - 'AWS_ACCESS_KEY_ID=${{AWS_ACCESS_KEY_ID}}'
-      - 'AWS_SECRET_ACCESS_KEY=${{AWS_SECRET_ACCESS_KEY}}'
-    when:
-      condition:
-        all:
-          deploy_to_ecs: '"${{DEPLOY_ECS}}" == "true"'
-
-  deploy_to_kubernetes:
-    image: codefresh/cf-deploy-kubernetes
-    tag: latest
-    working_directory: ${{main_clone}}
-    commands:
-      - /cf-deploy-kubernetes deployment.yml
-    environment:
-      - KUBERNETES_USER=${{KUBERNETES_USER}}
-      - KUBERNETES_PASSWORD=${{KUBERNETES_PASSWORD}}
-      - KUBERNETES_SERVER=${{KUBERNETES_SERVER}}
-      - DOCKER_IMAGE_TAG=${{CF_BRANCH}}
-    when:
-      condition:
-        all:
-          deploy_to_kubernetes: '"${{DEPLOY_KUBERNETES}}" == "true"'
+     - kubectl config use-context gke_kuberentes_us-central1-a_demo-chat
+     - helm ls
+     - helm upgrade --install --namespace qa1 --set test.tries=40  --set appversion=14 --set tag=v1.0 --set=commit.sha={{CF_REVISION} --set=commit.branch=${{CF_BRANCH}} integrations${{CF_REVISION}} ./deploy/demochatChart
+     - sleep 10
+     - helm test integrations${{CF_REVISION}} || true
+     - kubectl delete pods/integrations${{CF_REVISION}}-e2e-test -nqa1

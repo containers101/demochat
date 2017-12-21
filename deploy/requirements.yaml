@@ -1,0 +1,6 @@
+dependencies:
+  - name: mongodb
+    version: 0.4.18
+    repository: mongodb
+  - name: demoservice2
+    version: 0.1.0

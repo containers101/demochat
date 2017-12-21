@@ -1,0 +1,31 @@
+version: '1.0'
+steps:
+  BuildingDockerImage:
+    title: Building Docker Image
+    type: build
+    image_name: demochat
+    #working_directory: ./service1/
+    dockerfile: Dockerfile
+    tag: '${{CF_BRANCH_TAG_NORMALIZED}}'
+  
+  pushToRegistry:
+    type: push
+    title: push
+    description: push to cfcr
+    candidate: ${{BuildingDockerImage}}
+    tag: '${{CF_BRANCH_TAG_NORMALIZED}}'
+    image_name: demochat
+    registry: cfcr
+    fail_fast: false
+
+  IntegrationTests:
+    title : helm step
+    image: verchol/helmclient:v2.6.1
+    commands:
+     - kubectl config use-context jennys-cluster@codefresh-staging
+     - if [ $(helm ls | grep integrations${{CF_REVISION}} | awk '{print $8}') == "FAILED" ]; then helm delete --purge integrations${{CF_REVISION}}; fi
+     - helm upgrade integrations${{CF_REVISION}} deploy/demochatChart --install --namespace ${{NAMESPACE}} --set test.tries=40  --set appversion=14 --set tag=v1.0 --set commit.sha={{CF_REVISION}} --set commit.branch=${{CF_BRANCH}} --reset-values --force --debug
+     - sleep 10
+     - echo "Cleaning previous test pod..."; kubectl delete pods/integrations${{CF_REVISION}}-e2e-test -n${{NAMESPACE}} || true
+     - echo "Running integration test ..."; helm test integrations${{CF_REVISION}} || true
+     - echo "Cleaning test pod ..."; kubectl delete pods/integrations${{CF_REVISION}}-e2e-test -n${{NAMESPACE}}

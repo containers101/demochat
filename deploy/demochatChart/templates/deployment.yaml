@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  #  appversion: "{{.Values.appversion}}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
+      #  imageinfo : {{.Values.test.key}}
+        appversion: "{{.Values.appversion}}"
+    spec:
+        imagePullSecrets:
+        - name: {{ .Values.pullsecret.name }}
+        containers:
+        - image: {{ .Values.image.name }}
+        - image: {{.Values.image.repository}}:{{.Values.image.tag}}
+          name: app
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+              - name : MONGO_HELM
+                value: {{.Release.Name }}-mongodb
+          ports:
+            - containerPort: {{ .Values.service.internalPort }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}

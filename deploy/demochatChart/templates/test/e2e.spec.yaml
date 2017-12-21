@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ .Release.Name }}-e2e-test"
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  imagePullSecrets:
+  - name: {{ .Values.pullsecret.name }}
+  containers:
+  - name: {{ .Release.Name }}-e2e-test
+    image: {{ .Values.test.image}}
+    command: ["/bin/sh"]
+    args: ["-c" , 'wget --tries {{.Values.test.tries}} $(echo http://${{ template "demochat" . }}/login) ']
+        #["bin/sh"]
+    #args : ["-c", "sleep 10000"]
+        # ["http://{{ .Release.Name }}-demochat/login"]
+    imagePullPolicy: {{ .Values.image.pullPolicy }}
+    env:
+      - name: serviceName
+        value: {{ .Values.service.name }}
+
+      #W["sh", "-c", "curl $serviceNAme:80&&echo workded"]
+  restartPolicy: Never
