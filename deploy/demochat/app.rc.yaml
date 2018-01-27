@@ -1,0 +1,61 @@
+apiVersion: extensions/v1beta1
+kind: deployment
+metadata:
+  name: mattermost-app
+spec:
+  replicas: 1
+  selector:
+    app: mattermost-app
+  template:
+    metadata:
+      labels:
+        app: mattermost-app
+    spec:
+      containers:
+      - name: app
+        image: redspreadapps/mattermost-app:1
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+        - name: pgauth
+          mountPath: /etc/pgsecrets
+        # Uncomment this for production use
+        #
+        # - name: assets
+        #   mountPath: /mattermost/data
+        ports:
+        - containerPort: 80
+          protocol: TCP
+      - name: postgres
+        image: redspreadapps/mattermost-db:1
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+        - name: pgauth
+          mountPath: /etc/secrets
+        # Uncomment this for production use
+        # - name: postgres
+        #   mountPath: /var/lib/postgresql/data
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+      - name: pgauth
+        secret:
+          secretName: postgres-creds
+    # Google Cloud Platform Persistent Volume Disk
+      # - name: assets
+      #   gcePersistentDisk:
+      #     pdName: mattermost-assets
+      #     fsType: "ext4"
+      #
+      # - name: postgres
+      #   gcePersistentDisk:
+      #     pdName: mattermost-postgres
+      #     fsType: "ext4"
+      restartPolicy: Always

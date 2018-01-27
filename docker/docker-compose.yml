@@ -1,19 +1,14 @@
-# Let's Chat: Docker Compose
-# https://docs.docker.com/compose/
-#
-# Usage: docker-compose up
+#this is an example of a self-hosted chat app.
+#the composition uses just mongo as a database and an image that was built from a demo application https://github.com/containers101/demochat
 
-app:
-  image: sdelements/lets-chat:latest
-  links:
-    - mongo
-  ports:
-    - 80:8080
-    - 5222:5222
-  command: ls .
-
-
-mongo:
-  image: mongo:latest
-  ports :
-    - 27017:27017
+version: '2'
+services:
+  app:
+    image: 'containers101/demochat:master'
+    links:
+      - mongo
+    ports:
+      - 5000
+  mongo:
+    image: 'mongo:latest'
+    command: mongod --smallfiles

@@ -1,13 +1,12 @@
+
 #this is an example of a self-hosted chat app.
 #the composition uses just mongo as a database and an image that was built from a demo application https://github.com/containers101/demochat
 
 version: '2'
 services:
   demochat:
-   image: demochat:0.1
-   ports:
-      - 5000:5000
-   depends_on:
-      - mongo
+    build: .
+    ports:
+      - 5000
   mongo:
     image: mongo

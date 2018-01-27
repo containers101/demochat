@@ -1,0 +1,67 @@
+version: '1.0'
+steps:
+  BuildingDockerImage:
+    title: Building Docker Image
+    type: build
+    image_name: containers101/demochat
+    working_directory: ./
+    dockerfile: Dockerfile
+    tag: '${{CF_BRANCH_TAG_NORMALIZED}}'
+  RunningUnitTests:
+    title: Running Unit Tests
+    image: '${{BuildingDockerImage}}'
+    working_directory: IMAGE_WORK_DIR
+    entry_point:
+      - /bin/sh
+      - /codefresh/volume/cf-generated/unit_test_script
+    create_file:
+      path: /codefresh/volume/cf-generated
+      name: unit_test_script
+      content: npm test
+    on_success:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+              - CF_QUALITY: true
+    on_fail:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+              - CF_QUALITY: false
+  PromoteToArtifactory:
+     type: push
+     title: Push image to artifactory
+     description: So we can get scanning from xray
+     candidate: ${{BuildingDockerImage}}
+     tag: ${{CF_BRANCH_TAG_NORMALIZED}}
+     image_name: containers101/demochat
+     registry: docker-virtual2.ocpapps.ocpaws.jfrog.team
+  DeployWithHelm:
+    image: codefresh/plugin-helm:2.7.2
+    working_directory: ./
+    environment:
+      - CHART_NAME=./deploy/demochat/
+      - RELEASE_NAME=demochat
+      - KUBE_CONTEXT=helmdemo@jFrog-Helm
+      - NAMESPACE=demochat
+#production secret = codefresh-generated-docker-virtual2.ocpapps.ocpaws.jfrog.team-artifactory-docker-virtual-demochat
+      #- custom_imagePullSecret=codefresh-generated-r.cfcr.io-cfcr-demochat
+      #- custom_image_repository=r.cfcr.io/jfrog-azure-demo/containers101/demochat
+      - custom_image_repository=docker-virtual2.ocpapps.ocpaws.jfrog.team/containers101/demochat
+      - custom_imagePullSecret=codefresh-generated-docker-virtual2.ocpapps.ocpaws.jfrog.team-artifactory-docker-virtual-demochat
+      - custom_replicaCount=1
+      - custom_image_tag=${{CF_BRANCH_TAG_NORMALIZED}}
+      - custom_commit_sha=${{CF_SHORT_REVISION}}
+  helm_package:
+      image: devth/helm
+      commands: 
+        - cf_export PACKAGE=$(helm package ./deploy/demochat | cut -d " " -f 8)
+#  helm_push:
+#      image: appropriate/curl
+#      commands:
+#        - curl -v --data-binary "@$PACKAGE" http://artifactory-artifactory-ha-nfs.ocpapps.ocpaws.jfrog.team/artifactory/helm-prod/api/charts
+  pushHelmpackage:
+    image: r.cfcr.io/jfrog-azure-demo/jfrogdev/jfrogcligo:master
+    commands:
+      - jfrog rt config helm-rt --url https://artifactory-artifactory-ha-nfs.ocpapps.ocpaws.jfrog.team/artifactory --user admin --password ${{artifactorypassword}}
+      - jfrog rt u "$PACKAGE" helm-prod-local

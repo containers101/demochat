@@ -1,0 +1,4 @@
+apiVersion: v1
+description: demochat
+name: demochat
+version: 0.0.2

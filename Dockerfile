@@ -1,11 +1,15 @@
-# Change latest to your desired node version (https://hub.docker.com/r/library/node/tags/)
-FROM kkarczmarczyk/node-yarn:8.0
+FROM node:0.10-slim
 
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
+RUN npm install -g mocha
+RUN npm install -g istanbul
+RUN npm install -g gulp
 
-COPY package.json /usr/src/app/
-RUN yarn install
-COPY . /usr/src/app
+COPY ./package.json /src/package.json
+RUN cd /src && npm install
+COPY  ./ /src
 
-CMD [ "npm", "start" ]
+WORKDIR /src
+#ENV DEBUG=*
+
+
+CMD ["npm", "start"]
