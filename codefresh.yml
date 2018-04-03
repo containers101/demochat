@@ -29,6 +29,46 @@ steps:
       test:
         image: '${{build_step}}'
         command: npm test
+
+  TwistlockScanImage:
+    type: composition
+    composition:
+      version: '2'
+      services:
+        targetimage:
+          image: ${{build_step}} # Must be the Docker build step name
+          command: sh -c "exit 0"
+          labels:
+            build.image.id: ${{CF_BUILD_ID}} # Provides a lookup for the composition
+    composition_candidates:
+      scan_service:
+        image: codefresh/docker-twistcli:latest # Recommend replacing with current Twistlock Console version
+        environment: # Add only the Environment Variables you need
+          - CODEFRESH_CLI_KEY=${{CODEFRESH_CLI_KEY}} # Required
+          - CONSOLE_HOSTNAME=${{CONSOLE_HOSTNAME}} # Required
+          - CONSOLE_PORT=${{CONSOLE_PORT}} # Required
+          - CONSOLE_USERNAME=${{CONSOLE_USERNAME}} # Required
+          - CONSOLE_PASSWORD=${{CONSOLE_PASSWORD}} # Required
+          - DETAILS=true
+        command: python /twistlock-cli.py "docker inspect $$(docker inspect $$(docker ps -aqf label=build.image.id=${{CF_BUILD_ID}}) -f {{.Config.Image}}) -f {{.Id}} | sed 's/sha256://g'"
+        depends_on:
+          - targetimage
+        volumes: # Volumes required to run DIND
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /var/lib/docker:/var/lib/docker
+    add_flow_volume_to_composition: true
+    on_success: # Execute only once the step succeeded
+      metadata: # Declare the metadata attribute
+        set: # Specify the set operation
+          - ${{build_step.imageId}}: # Select any number of target images
+            - SECURITY_SCAN: true
+
+    on_fail: # Execute only once the step failed
+      metadata: # Declare the metadata attribute
+        set: # Specify the set operation
+          - ${{build_step.imageId}}: # Select any number of target images
+            - SECURITY_SCAN: false
+
   push_to_registry:
     title: Push To Registry
     type: push
