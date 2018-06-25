@@ -1,0 +1,23 @@
+version: '1.0'
+steps:
+  GetLogsFromOriginalBuild:
+    title: Getting logs from Original Build...
+    image: 'codefresh/cli:latest'
+    command: codefresh get logs ${{ORIGINAL_BUILD_ID}}
+# You will need GITHUB_TOKEN before proceeding.  More information is below.
+# Now that the shell out has completed we will need to setup a customer GitHub Status API and set to success.
+  SetExternalTestingStatus:
+    title: Setting External Testing Status to successful...
+    image: cloudposse/github-status-updater
+    environment:
+      - GITHUB_ACTION=update_state
+      # Requires GitHub Token from Service Account
+      - GITHUB_TOKEN=${{GITHUB_TOKEN}}
+      - GITHUB_OWNER=${{CF_REPO_OWNER}}
+      - GITHUB_REPO=${{CF_REPO_NAME}}
+      - GITHUB_REF=${{CF_REVISION}}
+      - GITHUB_CONTEXT=External Testing
+      - GITHUB_STATE=success
+      - GITHUB_DESCRIPTION=Testing Docker images built for ${{CF_BRANCH}}
+      # This URL can come from your External Testing scripts on an update.  A new update will overwrite the original status.
+      - GITHUB_TARGET_URL=${{CF_BUILD_URL}}
