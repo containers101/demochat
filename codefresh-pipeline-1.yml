@@ -1,0 +1,60 @@
+version: '1.0'
+# You will need to set PIPELINE_ID and GITHUB_TOKEN before proceeding.  More information is below.
+steps:
+  BuildingDockerImage:
+    title: Building Docker Image...
+    type: build
+    dockerfile: Dockerfile
+    image_name: dustinvanbuskirk/demochat
+    tag: '${{CF_BRANCH_TAG_NORMALIZED}}-${{CF_SHORT_REVISION}}'
+
+  RunningUnitTests:
+    type: composition
+    working_directory: '${{main_clone}}'
+    composition:
+      version: '2'
+      services:
+        mongo:
+          image: 'mongo:latest'
+          ports:
+            - 27017
+    composition_candidates:
+      test:
+        image: '${{BuildingDockerImage}}'
+        command: npm test
+
+# Build steps above can be anything
+# This build step can be anything but you will want to pass in the pipeline variables for use by next pipeline for tracing
+# In my example I am running Codefresh CLI as I have no external script
+# You may want to use the CLI to call back into your system but there are several options available
+  RunExternalScript:
+    title: Running External Script...
+    image: 'codefresh/cli:latest'
+    # PIPELINE_ID will be the ID for the 2nd Pipeline to execute after the external scripting is complete
+    # Can be found under General Settings under 2nd Pipeline CONFIGURATION in WEBHOOK curl URL Ex. 5b313055fe182817b3928731
+    command: cf export EXTERNAL_TEST_BUILD=$(codefresh run ${{PIPELINE_ID}} -b='${{CF_BRANCH}}' -s ${{CF_REVISION}} -v ORIGINAL_BUILD_ID=${{CF_BUILD_ID}} -d)
+
+  ExportingVariablesBackToPipeline:
+    title: "Exporting variables..."
+    image: alpine
+    commands:
+      - echo "Exporting variables..."
+
+# Now that the shell out is done we will need to setup a customer GitHub Status API and set to pending.
+# You may want to use this Docker image for your External Testing as well to update on failure with more information.
+# Both the ORIGINAL_BUILD "Codefresh" and EXTERNAL_TEST_BUILD "External Testing" will show as separate statuses
+  SetExternalTestingStatus:
+    title: Setting External Testing Status to pending...
+    image: cloudposse/github-status-updater
+    environment:
+      - GITHUB_ACTION=update_state
+      # Requires GitHub Token from Service Account
+      - GITHUB_TOKEN=${{GITHUB_TOKEN}}
+      - GITHUB_OWNER=${{CF_REPO_OWNER}}
+      - GITHUB_REPO=${{CF_REPO_NAME}}
+      - GITHUB_REF=${{CF_REVISION}}
+      - GITHUB_CONTEXT=External Testing
+      - GITHUB_STATE=pending
+      - GITHUB_DESCRIPTION=Testing Docker images built for ${{CF_BRANCH}}
+      # This URL can come from your External Testing scripts on an update.  A new update will overwrite the original status.
+      - GITHUB_TARGET_URL=https://g.codefresh.io/pipelines/${{CF_REPO}}/builds/${{EXTERNAL_TEST_BUILD}}
