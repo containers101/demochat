@@ -5,6 +5,7 @@ metadata:
   name: demo-chat
   labels:
     service: demo-chat
+    revision: {{CF_REVISION}}
 spec:
   replicas: 1
   template:
@@ -12,8 +13,10 @@ spec:
       labels:
         service: demo-chat
     spec:
+      imagePullSecrets:
+        - name: {{PULL_SECRET}}
       containers:
-      - image: ${{build_step}}
+      - image: r.cfcr.io/{{CF_REPO_OWNER}}/{{CF_REPO_NAME}}:{{CF_SHORT_REVISION}}
         name: app
         imagePullPolicy: Always
         ports:
