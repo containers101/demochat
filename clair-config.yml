@@ -1,0 +1,11 @@
+General:
+  clair_url: 'URL'
+  verify: false
+Plugins:
+  Docker:
+    class: paclair.plugins.docker_plugin.DockerPlugin
+    registries:
+      REGISTRY:
+        auth:
+          - "USERNAME"
+          - "PASSWORD"
