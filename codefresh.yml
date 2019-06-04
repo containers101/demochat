@@ -1,6 +1,6 @@
 version: '2.0'
 steps:
-  build_step:7
+  build_step:
     title: Build
     type: build
     dockerfile: Dockerfile
@@ -17,7 +17,7 @@ steps:
 
   unit_test:
     type: composition
-    working_directory: '${{main_clone}}'
+    working_directory: '${{main_clone_2}}'
     composition:
       version: '2'
       services:
@@ -28,16 +28,16 @@ steps:
     composition_candidates:
       test:
         image: '${{build_step}}'
-        command: npm test
+        command: npm test rpg
   push_to_registry:
     title: Push To Registry
     type: push
     candidate: ${{build_step}}
-    tag: ${{CF_BRANCH}}
+    tag: ${{CF_BRANCH_2}}
 
   deploy_to_ecs:
     title: Deploy Container to ECS
-    image: codefresh/cf-deploy-ecs
+    image: codefresh/cf-deploy-ecs-2
     commands:
       - >-
         cfecs-update --image-name containers101/demochat --image-tag
