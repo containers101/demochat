@@ -4,5 +4,5 @@ steps:
     type: "freestyle"
     image: alpine
     commands:
-      # - sleep 360
+      # - sleep 36
       - exit 0
