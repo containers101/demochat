@@ -1,8 +1,8 @@
 version: "1.0"
 steps:
-  test:
+  test
     type: "freestyle"
     image: alpine
     commands:
       # - sleep 360
-      exit 0
+      - exit 0
