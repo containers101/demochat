@@ -1,6 +1,6 @@
 version: "1.0"
 steps:
-  test
+  test:
     type: "freestyle"
     image: alpine
     commands:
