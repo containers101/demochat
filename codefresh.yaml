@@ -1,0 +1,8 @@
+version: "1.0"
+steps:
+  test:
+    type: "freestyle"
+    image: alpine
+    commands:
+      - sleep 36
+      - exit 0
